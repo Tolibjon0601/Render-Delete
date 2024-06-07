@@ -4,24 +4,29 @@ const box = document.querySelector(".box");
 const modal = document.querySelector(".modal");
 const content = document.querySelector(".content");
 const loader = document.querySelector(".loader");
+
 const render = (data) => {
-  box.innerHTML = data.map(
-    (item) => `
+  box.innerHTML = data
+    .map(
+      (item) => `
     <div>
-      <img width="300" src="${item.url}" alt="img" />
+      <img width="300" height="300" src="${item.url}" alt="img" />
       <h1>${item.title}</h1>
-      <button onclick="openModal(${item.id})">show</button>
-      <button data-delete="${item.id}">Delete</button>
+      <button class="show_btn" onclick="openModal(${item.id})">show</button>
+      <button class="delete_btn" data-delete="${item.id}">Delete</button>
     </div>
   `
-  ).join("")
+    )
+    .join("");
 };
+
 const getData = () => {
   fetch("http://localhost:3600/photos")
     .then((res) => res.json())
     .then((data) => {
       render(data);
-    });
+    })
+    .catch((error) => console.error("Error fetching data:", error));
 };
 
 getData();
@@ -30,8 +35,6 @@ form.addEventListener("submit", (e) => {
   e.preventDefault();
   let obj = {};
 
-  // obj.title = inputs[0].value;
-  // obj.url = inputs[1].value;
   for (let i of inputs) {
     obj[i.name] = i.value;
     i.value = "";
@@ -44,10 +47,11 @@ form.addEventListener("submit", (e) => {
     method: "POST",
     body: JSON.stringify(obj),
   })
-    .then((nurilloh) => nurilloh.json())
+    .then((res) => res.json())
     .then(() => {
       getData();
-    });
+    })
+    .catch((error) => console.error("Error posting data:", error));
 });
 
 const openModal = (id) => {
@@ -59,21 +63,33 @@ const openModal = (id) => {
     .then((data) => {
       content.innerHTML = `
         <div>
-          <img width="300" src="${data.url}" alt="img" />
+          <img width="500" height="500" src="${data.url}" alt="img" />
           <h1>${data.title}</h1>
         </div>
       `;
     })
     .finally(() => {
       loader.style.display = "none";
-    });
+    })
+    .catch((error) => console.error("Error fetching modal data:", error));
 };
 
 const closeModal = () => {
   modal.classList.remove("active");
 };
-box.addEventListener("click",(e)=>{
-if(e.target.dataset.delete){
-fetch()
-}
-})
+
+box.addEventListener("click", (e) => {
+  if (e.target.dataset.delete) {
+    const id = e.target.dataset.delete;
+    if (confirm("Are you sure you want to delete this item?")) {
+      fetch(`http://localhost:3600/photos/${id}`, {
+        method: "DELETE",
+      })
+        .then((res) => res.json())
+        .then(() => {
+          getData();
+        })
+        .catch((error) => console.error("Error deleting data:", error));
+    }
+  }
+});
